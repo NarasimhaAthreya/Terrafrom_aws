@@ -1,7 +1,9 @@
 provider "aws" {
-  region = "ap-south-1"
-
+  region     = "ap-south-1"
+  access_key = var.tf_access_key
+  secret_key = var.tf_secret_key
 }
+
 resource "aws_vpc" "terraform_vpc" {
   cidr_block = "10.5.0.0/16"
 
@@ -21,6 +23,7 @@ resource "aws_instance" "ec2_terraform" {
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.terraform_subnet.id
   tags = {
-    Name = "Terraform AWS"
+    Name    = "Terraform AWS"
+    Updated = "Terraform"
   }
 }
