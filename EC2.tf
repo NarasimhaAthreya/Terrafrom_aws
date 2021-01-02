@@ -4,6 +4,10 @@ provider "aws" {
   secret_key = var.tf_secret_key
 }
 
+locals {
+  setup_name = "terraform"
+}
+
 resource "aws_vpc" "terraform_vpc" {
   cidr_block = "10.5.0.0/16"
 
@@ -24,6 +28,12 @@ resource "aws_instance" "ec2_terraform" {
   subnet_id     = aws_subnet.terraform_subnet.id
   tags = {
     Name    = "Terraform AWS"
-    Updated = "Terraform"
+    Updated = "${local.setup_name}"
   }
+}
+
+output "Instance_IP" {
+
+  value = aws_instance.ec2_terraform
+
 }
