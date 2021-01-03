@@ -41,6 +41,11 @@ resource "aws_lambda_function" "terraform_lamda" {
   handler          = "app.handlers"
   source_code_hash = filebase64sha256("app.zip")
   runtime          = "nodejs12.x"
+  depends_on = [
+    aws_iam_role_policy_attachment.lambda_logs,
+    aws_cloudwatch_log_group.example,
+  ]
+}
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -86,6 +91,7 @@ resource "aws_api_gateway_integration" "terraform_integration" {
   rest_api_id             = aws_api_gateway_rest_api.terraform_apigateway.id
   resource_id             = aws_api_gateway_resource.terraform_resource.id
   http_method             = aws_api_gateway_method.terraform_method.http_method
+  type                    = "AWS"
   integration_http_method = "GET"
   uri                     = aws_lambda_function.terraform_lamda.invoke_arn
 }
@@ -93,8 +99,42 @@ resource "aws_api_gateway_integration" "terraform_integration" {
 resource "aws_api_gateway_method_response" "terraform_response" {
   rest_api_id = aws_api_gateway_rest_api.terraform_apigateway.id
   resource_id = aws_api_gateway_resource.terraform_resource.id
-  http_method = aws_api_gateway_method.terraform_method.method
+  http_method = aws_api_gateway_method.terraform_method.http_method
   status_code = "200"
+}
+
+
+resource "aws_cloudwatch_log_group" "terraform_cloudwatach" {
+  name              = "/aws/lambda/terraform_lamda"
+  retention_in_days = 14
+}
+
+resource "aws_iam_policy" "lambda_logging" {
+  name        = "lambda_logging"
+  path        = "/"
+  description = "IAM policy for logging from a lambda"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*",
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.lambda_logging.arn
 }
 output "Instance_IP" {
 
