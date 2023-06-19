@@ -7,7 +7,7 @@ resource "aws_instance" "tf-ec2-1" {
 
 
   tags = {
-    "name"       = var.ec2_names[count.index]
+    "Name"       = var.ec2_names[count.index]
     "instanceNo" = "${count.index}" + 1
   }
 
@@ -17,6 +17,7 @@ resource "aws_instance" "tf-ec2-1" {
 
 output "aws_ec2_values" {
 
-  value = zipmap(aws_instance.tf-ec2-1.*.ami, aws_instance.tf-ec2-1.*.private_ip)
-
+ value = {
+    for k, v in aws_instance.tf-ec2-1 : k => v.public_ip
+  }
 }
